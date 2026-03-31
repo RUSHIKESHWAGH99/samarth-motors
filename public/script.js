@@ -30,6 +30,8 @@
         hasBackdrop: !!backdrop,
         innerWidth: typeof window !== "undefined" ? window.innerWidth : null,
         readyState: document.readyState,
+        pointerCoarse: window.matchMedia("(pointer: coarse)").matches,
+        maxTouchPoints: navigator.maxTouchPoints,
     });
     // #endregion
     if (y) y.textContent = String(new Date().getFullYear());
@@ -137,24 +139,45 @@
             }
         });
 
-        btn.addEventListener(
-            "pointerup",
-            (e) => {
-                if (e.pointerType === "mouse" && e.button !== 0) return;
-                suppressNextMenuBtnClick = true;
-                e.preventDefault();
-                e.stopPropagation();
-                // #region agent log
-                dbgLog("H2", "script.js:menu-btn:pointerup", "hamburger pointerup", {
-                    pointerType: e.pointerType,
-                    ariaExpanded: btn.getAttribute("aria-expanded"),
-                    innerWidth: window.innerWidth,
-                });
-                // #endregion
-                setOpen(!isMenuOpen());
-            },
-            true
-        );
+        const coarsePointerMq = window.matchMedia("(pointer: coarse)");
+
+        if (coarsePointerMq.matches) {
+            /* Real phones: synthetic click is unreliable; toggle on touchend. */
+            btn.addEventListener(
+                "touchend",
+                (e) => {
+                    if (!btn.contains(e.target)) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // #region agent log
+                    dbgLog("H2", "script.js:menu-btn:touchend", "hamburger touchend (coarse)", {
+                        ariaExpanded: btn.getAttribute("aria-expanded"),
+                    });
+                    // #endregion
+                    setOpen(!isMenuOpen());
+                },
+                { passive: false, capture: true }
+            );
+        } else {
+            btn.addEventListener(
+                "pointerup",
+                (e) => {
+                    if (e.pointerType === "mouse" && e.button !== 0) return;
+                    suppressNextMenuBtnClick = true;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // #region agent log
+                    dbgLog("H2", "script.js:menu-btn:pointerup", "hamburger pointerup", {
+                        pointerType: e.pointerType,
+                        ariaExpanded: btn.getAttribute("aria-expanded"),
+                        innerWidth: window.innerWidth,
+                    });
+                    // #endregion
+                    setOpen(!isMenuOpen());
+                },
+                true
+            );
+        }
 
         btn.addEventListener("click", (e) => {
             if (suppressNextMenuBtnClick) {
@@ -163,9 +186,15 @@
                 e.stopPropagation();
                 return;
             }
+            if (coarsePointerMq.matches && e.detail > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
             // #region agent log
-            dbgLog("H2", "script.js:menu-btn:click", "hamburger click (keyboard/legacy)", {
+            dbgLog("H2", "script.js:menu-btn:click", "hamburger click (keyboard/fine-pointer)", {
                 ariaExpanded: btn.getAttribute("aria-expanded"),
+                detail: e.detail,
                 targetTag: e.target && e.target.tagName,
                 innerWidth: window.innerWidth,
             });
