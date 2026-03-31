@@ -2,48 +2,10 @@
  * Mobile menu (drawer + backdrop), footer year, and FAQ accordions for Samarth Motors.
  */
 (function () {
-    // #region agent log
-    function dbgLog(hypothesisId, location, message, data) {
-        fetch("http://127.0.0.1:7244/ingest/006557e4-b73d-4a4a-861d-1bfac224119a", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                hypothesisId,
-                location,
-                message,
-                data: data || {},
-                timestamp: Date.now(),
-                runId: "post-fix",
-            }),
-        }).catch(() => {});
-    }
-    // #endregion
-
     const btn = document.getElementById("menu-btn");
     const panel = document.getElementById("mobile-nav");
     const backdrop = document.getElementById("mobile-nav-backdrop");
     const y = document.getElementById("y");
-    // #region agent log
-    dbgLog("H1", "script.js:init-dom", "elements after query", {
-        hasBtn: !!btn,
-        hasPanel: !!panel,
-        hasBackdrop: !!backdrop,
-        innerWidth: typeof window !== "undefined" ? window.innerWidth : null,
-        readyState: document.readyState,
-        pointerCoarse: window.matchMedia("(pointer: coarse)").matches,
-        maxTouchPoints: navigator.maxTouchPoints,
-        mobileTouchMenu: (() => {
-            try {
-                return (
-                    navigator.maxTouchPoints > 0 &&
-                    window.matchMedia("(max-width: 1099px)").matches
-                );
-            } catch {
-                return false;
-            }
-        })(),
-    });
-    // #endregion
     if (y) y.textContent = String(new Date().getFullYear());
 
     function syncSiteTopHeight() {
@@ -74,14 +36,6 @@
             closeFallbackTimer = 0;
             const opEpoch = ++menuOpEpoch;
 
-            // #region agent log
-            dbgLog("H3,H5", "script.js:setOpen:enter", "setOpen called", {
-                open,
-                ariaExpandedBefore: btn.getAttribute("aria-expanded"),
-                panelHidden: panel.hasAttribute("hidden"),
-                panelIsOpenClass: panel.classList.contains("is-open"),
-            });
-            // #endregion
             btn.setAttribute("aria-expanded", open ? "true" : "false");
             btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
             panel.setAttribute("aria-hidden", open ? "false" : "true");
@@ -100,21 +54,11 @@
                 requestAnimationFrame(() => {
                     void panel.offsetWidth;
                     panel.classList.add("is-open");
-                    // #region agent log
-                    dbgLog("H5", "script.js:setOpen:after-rAF", "open path after is-open add", {
-                        hasHidden: panel.hasAttribute("hidden"),
-                        hasIsOpen: panel.classList.contains("is-open"),
-                        ariaExpanded: btn.getAttribute("aria-expanded"),
-                    });
-                    // #endregion
                 });
                 return;
             }
 
             if (panel.hasAttribute("hidden")) {
-                // #region agent log
-                dbgLog("H4", "script.js:setOpen:early-exit", "close path skipped — panel already hidden", {});
-                // #endregion
                 return;
             }
 
@@ -160,7 +104,6 @@
             }
         }
 
-        /* Touchend: narrow viewports with touch hardware (avoids relying on pointer: coarse or click). */
         btn.addEventListener(
             "touchend",
             (e) => {
@@ -168,18 +111,11 @@
                 if (!btn.contains(e.target)) return;
                 e.preventDefault();
                 e.stopPropagation();
-                // #region agent log
-                dbgLog("H2", "script.js:menu-btn:touchend", "hamburger touchend (narrow+touch)", {
-                    ariaExpanded: btn.getAttribute("aria-expanded"),
-                    innerWidth: window.innerWidth,
-                });
-                // #endregion
                 setOpen(!isMenuOpen());
             },
             { passive: false, capture: true }
         );
 
-        /* Pointer/mouse: desktop or no touch — skip on narrow+touch so we do not double-toggle with touchend. */
         btn.addEventListener(
             "pointerup",
             (e) => {
@@ -188,13 +124,6 @@
                 suppressNextMenuBtnClick = true;
                 e.preventDefault();
                 e.stopPropagation();
-                // #region agent log
-                dbgLog("H2", "script.js:menu-btn:pointerup", "hamburger pointerup", {
-                    pointerType: e.pointerType,
-                    ariaExpanded: btn.getAttribute("aria-expanded"),
-                    innerWidth: window.innerWidth,
-                });
-                // #endregion
                 setOpen(!isMenuOpen());
             },
             true
@@ -212,14 +141,6 @@
                 e.stopPropagation();
                 return;
             }
-            // #region agent log
-            dbgLog("H2", "script.js:menu-btn:click", "hamburger click (keyboard/fine-pointer)", {
-                ariaExpanded: btn.getAttribute("aria-expanded"),
-                detail: e.detail,
-                targetTag: e.target && e.target.tagName,
-                innerWidth: window.innerWidth,
-            });
-            // #endregion
             e.preventDefault();
             e.stopPropagation();
             setOpen(!isMenuOpen());
@@ -238,11 +159,6 @@
             if (!(t instanceof Node)) return;
             if (!isMenuOpen()) return;
             if (btn.contains(t) || panel.contains(t)) return;
-            // #region agent log
-            dbgLog("H4", "script.js:document:click", "document closes menu (outside hit)", {
-                tag: t instanceof Element ? t.tagName : null,
-            });
-            // #endregion
             setOpen(false);
         });
 
@@ -259,13 +175,6 @@
             }
         }
         desktopNavMq.addEventListener("change", closeMenuIfDesktop);
-    } else {
-        // #region agent log
-        dbgLog("H1", "script.js:no-menu-init", "btn or panel missing — listeners not attached", {
-            hasBtn: !!btn,
-            hasPanel: !!panel,
-        });
-        // #endregion
     }
 
     document.querySelectorAll(".faq-q").forEach((question) => {
