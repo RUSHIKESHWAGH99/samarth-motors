@@ -32,6 +32,16 @@
         readyState: document.readyState,
         pointerCoarse: window.matchMedia("(pointer: coarse)").matches,
         maxTouchPoints: navigator.maxTouchPoints,
+        mobileTouchMenu: (() => {
+            try {
+                return (
+                    navigator.maxTouchPoints > 0 &&
+                    window.matchMedia("(max-width: 1099px)").matches
+                );
+            } catch {
+                return false;
+            }
+        })(),
     });
     // #endregion
     if (y) y.textContent = String(new Date().getFullYear());
@@ -139,45 +149,56 @@
             }
         });
 
-        const coarsePointerMq = window.matchMedia("(pointer: coarse)");
-
-        if (coarsePointerMq.matches) {
-            /* Real phones: synthetic click is unreliable; toggle on touchend. */
-            btn.addEventListener(
-                "touchend",
-                (e) => {
-                    if (!btn.contains(e.target)) return;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // #region agent log
-                    dbgLog("H2", "script.js:menu-btn:touchend", "hamburger touchend (coarse)", {
-                        ariaExpanded: btn.getAttribute("aria-expanded"),
-                    });
-                    // #endregion
-                    setOpen(!isMenuOpen());
-                },
-                { passive: false, capture: true }
-            );
-        } else {
-            btn.addEventListener(
-                "pointerup",
-                (e) => {
-                    if (e.pointerType === "mouse" && e.button !== 0) return;
-                    suppressNextMenuBtnClick = true;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // #region agent log
-                    dbgLog("H2", "script.js:menu-btn:pointerup", "hamburger pointerup", {
-                        pointerType: e.pointerType,
-                        ariaExpanded: btn.getAttribute("aria-expanded"),
-                        innerWidth: window.innerWidth,
-                    });
-                    // #endregion
-                    setOpen(!isMenuOpen());
-                },
-                true
-            );
+        function mobileTouchMenuNow() {
+            try {
+                return (
+                    navigator.maxTouchPoints > 0 &&
+                    window.matchMedia("(max-width: 1099px)").matches
+                );
+            } catch {
+                return false;
+            }
         }
+
+        /* Touchend: narrow viewports with touch hardware (avoids relying on pointer: coarse or click). */
+        btn.addEventListener(
+            "touchend",
+            (e) => {
+                if (!mobileTouchMenuNow()) return;
+                if (!btn.contains(e.target)) return;
+                e.preventDefault();
+                e.stopPropagation();
+                // #region agent log
+                dbgLog("H2", "script.js:menu-btn:touchend", "hamburger touchend (narrow+touch)", {
+                    ariaExpanded: btn.getAttribute("aria-expanded"),
+                    innerWidth: window.innerWidth,
+                });
+                // #endregion
+                setOpen(!isMenuOpen());
+            },
+            { passive: false, capture: true }
+        );
+
+        /* Pointer/mouse: desktop or no touch — skip on narrow+touch so we do not double-toggle with touchend. */
+        btn.addEventListener(
+            "pointerup",
+            (e) => {
+                if (mobileTouchMenuNow()) return;
+                if (e.pointerType === "mouse" && e.button !== 0) return;
+                suppressNextMenuBtnClick = true;
+                e.preventDefault();
+                e.stopPropagation();
+                // #region agent log
+                dbgLog("H2", "script.js:menu-btn:pointerup", "hamburger pointerup", {
+                    pointerType: e.pointerType,
+                    ariaExpanded: btn.getAttribute("aria-expanded"),
+                    innerWidth: window.innerWidth,
+                });
+                // #endregion
+                setOpen(!isMenuOpen());
+            },
+            true
+        );
 
         btn.addEventListener("click", (e) => {
             if (suppressNextMenuBtnClick) {
@@ -186,7 +207,7 @@
                 e.stopPropagation();
                 return;
             }
-            if (coarsePointerMq.matches && e.detail > 0) {
+            if (mobileTouchMenuNow() && e.detail > 0) {
                 e.preventDefault();
                 e.stopPropagation();
                 return;
