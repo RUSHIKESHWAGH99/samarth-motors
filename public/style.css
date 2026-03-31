@@ -625,20 +625,6 @@ a:hover { text-decoration: underline; }
 }
 .gallery-item:hover img { transform: scale(1.04); }
 
-.gallery-cap {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0;
-    padding: 10px 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #fff;
-    background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
-    border-radius: 0 0 11px 11px;
-}
-
 /* Reviews */
 .reviews-grid {
     display: grid;
