@@ -22,26 +22,66 @@
 
     if (btn && panel) {
         function isMenuOpen() {
-            return panel.classList.contains("is-open");
+            return btn.getAttribute("aria-expanded") === "true";
         }
+
+        let closeFallbackTimer = 0;
 
         function setOpen(open) {
             btn.setAttribute("aria-expanded", open ? "true" : "false");
             btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-            panel.classList.toggle("is-open", open);
             panel.setAttribute("aria-hidden", open ? "false" : "true");
-            if (open) {
-                panel.removeAttribute("inert");
-            } else {
-                panel.setAttribute("inert", "");
-            }
+
             if (backdrop) {
                 backdrop.classList.toggle("is-open", open);
                 backdrop.setAttribute("aria-hidden", open ? "false" : "true");
             }
             document.body.classList.toggle("mobile-menu-open", open);
             syncSiteTopHeight();
+
+            if (open) {
+                window.clearTimeout(closeFallbackTimer);
+                panel.removeAttribute("hidden");
+                panel.removeAttribute("inert");
+                panel.classList.remove("is-open");
+                requestAnimationFrame(() => {
+                    void panel.offsetWidth;
+                    panel.classList.add("is-open");
+                });
+                return;
+            }
+
+            if (panel.hasAttribute("hidden")) {
+                return;
+            }
+
+            panel.setAttribute("inert", "");
+            panel.classList.remove("is-open");
+
+            function finalizeClose() {
+                panel.setAttribute("hidden", "");
+            }
+
+            function onTransitionEnd(ev) {
+                if (ev.propertyName !== "transform") return;
+                panel.removeEventListener("transitionend", onTransitionEnd);
+                window.clearTimeout(closeFallbackTimer);
+                finalizeClose();
+            }
+
+            panel.addEventListener("transitionend", onTransitionEnd);
+            closeFallbackTimer = window.setTimeout(() => {
+                panel.removeEventListener("transitionend", onTransitionEnd);
+                finalizeClose();
+            }, 360);
         }
+
+        setOpen(false);
+        window.addEventListener("pageshow", (ev) => {
+            if (ev.persisted) {
+                setOpen(false);
+            }
+        });
 
         btn.addEventListener("click", (e) => {
             e.preventDefault();

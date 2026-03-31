@@ -267,6 +267,11 @@ a:hover { text-decoration: underline; }
 }
 
 @media (max-width: 1099px) {
+    /* Collapsed by default; [hidden] removes panel from layout until opened */
+    .mobile-nav[hidden] {
+        display: none !important;
+    }
+
     .mobile-nav {
         display: flex;
         flex-direction: column;
