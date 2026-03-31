@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://samarth-motors.vercel.app/sitemap.xml
