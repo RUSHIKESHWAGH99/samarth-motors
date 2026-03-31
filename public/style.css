@@ -66,6 +66,8 @@ a:hover { text-decoration: underline; }
 }
 
 .banner-247 {
+    position: relative;
+    z-index: 103;
     background: linear-gradient(105deg, #0f766e 0%, #059669 35%, #ca8a04 70%, #ea580c 100%);
     color: #fff;
     font-size: 0.88rem;
@@ -155,9 +157,10 @@ a:hover { text-decoration: underline; }
     .banner-247-text { max-width: none; flex: 1; }
 }
 
-/* Header */
+/* Header — z-index above .mobile-nav-backdrop (98) so taps reach the menu button */
 .header {
     position: relative;
+    z-index: 103;
     background: rgba(12, 18, 34, 0.97);
     backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--border);
@@ -169,6 +172,8 @@ a:hover { text-decoration: underline; }
     justify-content: space-between;
     gap: 16px;
     min-height: 68px;
+    position: relative;
+    z-index: 1;
 }
 
 .logo {
@@ -214,6 +219,7 @@ a:hover { text-decoration: underline; }
     cursor: pointer;
     color: var(--text);
     border-radius: 10px;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
 }
 .menu-btn:focus-visible {
@@ -258,6 +264,12 @@ a:hover { text-decoration: underline; }
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
+    }
+
+    /* Hard-hide desktop row nav on narrow viewports (e.g. “Desktop site” in Chrome) */
+    .nav,
+    .header-cta {
+        display: none !important;
     }
 }
 
