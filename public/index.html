@@ -180,6 +180,9 @@
             </button>
         </div>
     </header>
+    </div>
+
+    <!-- Outside .site-top so fixed layers cannot steal stacking/taps from the sticky bar (z-index 100). -->
     <div class="mobile-nav-backdrop" id="mobile-nav-backdrop" aria-hidden="true" tabindex="-1"></div>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile menu" aria-hidden="true" inert hidden>
         <div class="mobile-nav-inner">
@@ -198,7 +201,6 @@
             <a class="btn btn-outline btn-block mobile-nav-cta" href="https://share.google/GvDAcw6ftCOXPFEFG" target="_blank" rel="noopener noreferrer">Open Google Maps</a>
         </div>
     </nav>
-    </div>
 
     <main id="main">
         <section class="hero" id="home">
@@ -553,6 +555,6 @@
         </a>
     </div>
 
-    <script src="/script.js" defer></script>
+    <script src="/script.js"></script>
 </body>
 </html>
