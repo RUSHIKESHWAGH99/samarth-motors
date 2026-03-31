@@ -818,6 +818,32 @@ a:hover { text-decoration: underline; }
 
 .nowrap { white-space: nowrap; }
 
+/* Local SEO content block */
+.local-seo-block {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.local-seo-block .section-title {
+    margin-bottom: 20px;
+}
+
+.local-seo-block p {
+    color: var(--muted);
+    font-size: 1.02rem;
+    line-height: 1.75;
+    margin-bottom: 16px;
+}
+
+.local-seo-block p:last-child {
+    margin-bottom: 0;
+}
+
+.local-seo-block strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
 /* CTA band */
 .cta-band {
     background: linear-gradient(135deg, #1e293b 0%, var(--bg) 40%, #1a1a2e 100%);

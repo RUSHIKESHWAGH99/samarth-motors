@@ -14,11 +14,14 @@ After your real URL is live, update these files to match **exactly** (replace `h
 - `public/sitemap.xml`
 - `public/robots.txt`
 
-## Google Search Console
+## Google Search Console & SEO
 
-- Add property for your final URL.
-- Submit `https://<your-domain>/sitemap.xml`.
-- Optionally claim the [Google Business Profile](https://business.google.com) for the garage and link this website — that helps local “Samarth Motors” searches.
+The site includes **meta tags**, **Open Graph / Twitter**, **`robots.txt`**, **`sitemap.xml`**, and **JSON-LD** (`WebSite`, `LocalBusiness` + `AutomotiveRepair`, `FAQPage`), plus a **local keywords** section on the page for Waluj / CIDCO / Maruti / Hyundai.
+
+1. Add a Search Console property for your live URL.
+2. Submit **`/sitemap.xml`** and request indexing for the homepage.
+3. **Google Business Profile** — claim the garage, use the same name, address, phone, and **link this website**. This matters most for ranking above random pages in **local** search.
+4. Ask happy customers to **review on Google** and mention “Waluj” / “Samarth Motors” naturally.
 
 ## Local preview
 
