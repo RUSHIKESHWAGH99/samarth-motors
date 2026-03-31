@@ -2,10 +2,36 @@
  * Mobile menu (drawer + backdrop), footer year, and FAQ accordions for Samarth Motors.
  */
 (function () {
+    // #region agent log
+    function dbgLog(hypothesisId, location, message, data) {
+        fetch("http://127.0.0.1:7244/ingest/006557e4-b73d-4a4a-861d-1bfac224119a", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                hypothesisId,
+                location,
+                message,
+                data: data || {},
+                timestamp: Date.now(),
+                runId: "post-fix",
+            }),
+        }).catch(() => {});
+    }
+    // #endregion
+
     const btn = document.getElementById("menu-btn");
     const panel = document.getElementById("mobile-nav");
     const backdrop = document.getElementById("mobile-nav-backdrop");
     const y = document.getElementById("y");
+    // #region agent log
+    dbgLog("H1", "script.js:init-dom", "elements after query", {
+        hasBtn: !!btn,
+        hasPanel: !!panel,
+        hasBackdrop: !!backdrop,
+        innerWidth: typeof window !== "undefined" ? window.innerWidth : null,
+        readyState: document.readyState,
+    });
+    // #endregion
     if (y) y.textContent = String(new Date().getFullYear());
 
     function syncSiteTopHeight() {
@@ -26,8 +52,24 @@
         }
 
         let closeFallbackTimer = 0;
+        /** True after pointerup handled toggle; blocks duplicate synthetic click (touch/pen). */
+        let suppressNextMenuBtnClick = false;
+        /** Invalidates pending close timers / transitionend from a previous setOpen. */
+        let menuOpEpoch = 0;
 
         function setOpen(open) {
+            window.clearTimeout(closeFallbackTimer);
+            closeFallbackTimer = 0;
+            const opEpoch = ++menuOpEpoch;
+
+            // #region agent log
+            dbgLog("H3,H5", "script.js:setOpen:enter", "setOpen called", {
+                open,
+                ariaExpandedBefore: btn.getAttribute("aria-expanded"),
+                panelHidden: panel.hasAttribute("hidden"),
+                panelIsOpenClass: panel.classList.contains("is-open"),
+            });
+            // #endregion
             btn.setAttribute("aria-expanded", open ? "true" : "false");
             btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
             panel.setAttribute("aria-hidden", open ? "false" : "true");
@@ -40,18 +82,27 @@
             syncSiteTopHeight();
 
             if (open) {
-                window.clearTimeout(closeFallbackTimer);
                 panel.removeAttribute("hidden");
                 panel.removeAttribute("inert");
                 panel.classList.remove("is-open");
                 requestAnimationFrame(() => {
                     void panel.offsetWidth;
                     panel.classList.add("is-open");
+                    // #region agent log
+                    dbgLog("H5", "script.js:setOpen:after-rAF", "open path after is-open add", {
+                        hasHidden: panel.hasAttribute("hidden"),
+                        hasIsOpen: panel.classList.contains("is-open"),
+                        ariaExpanded: btn.getAttribute("aria-expanded"),
+                    });
+                    // #endregion
                 });
                 return;
             }
 
             if (panel.hasAttribute("hidden")) {
+                // #region agent log
+                dbgLog("H4", "script.js:setOpen:early-exit", "close path skipped — panel already hidden", {});
+                // #endregion
                 return;
             }
 
@@ -59,10 +110,12 @@
             panel.classList.remove("is-open");
 
             function finalizeClose() {
+                if (opEpoch !== menuOpEpoch) return;
                 panel.setAttribute("hidden", "");
             }
 
             function onTransitionEnd(ev) {
+                if (opEpoch !== menuOpEpoch) return;
                 if (ev.propertyName !== "transform") return;
                 panel.removeEventListener("transitionend", onTransitionEnd);
                 window.clearTimeout(closeFallbackTimer);
@@ -72,6 +125,7 @@
             panel.addEventListener("transitionend", onTransitionEnd);
             closeFallbackTimer = window.setTimeout(() => {
                 panel.removeEventListener("transitionend", onTransitionEnd);
+                if (opEpoch !== menuOpEpoch) return;
                 finalizeClose();
             }, 360);
         }
@@ -83,7 +137,39 @@
             }
         });
 
+        btn.addEventListener(
+            "pointerup",
+            (e) => {
+                if (e.pointerType === "mouse" && e.button !== 0) return;
+                suppressNextMenuBtnClick = true;
+                e.preventDefault();
+                e.stopPropagation();
+                // #region agent log
+                dbgLog("H2", "script.js:menu-btn:pointerup", "hamburger pointerup", {
+                    pointerType: e.pointerType,
+                    ariaExpanded: btn.getAttribute("aria-expanded"),
+                    innerWidth: window.innerWidth,
+                });
+                // #endregion
+                setOpen(!isMenuOpen());
+            },
+            true
+        );
+
         btn.addEventListener("click", (e) => {
+            if (suppressNextMenuBtnClick) {
+                suppressNextMenuBtnClick = false;
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+            // #region agent log
+            dbgLog("H2", "script.js:menu-btn:click", "hamburger click (keyboard/legacy)", {
+                ariaExpanded: btn.getAttribute("aria-expanded"),
+                targetTag: e.target && e.target.tagName,
+                innerWidth: window.innerWidth,
+            });
+            // #endregion
             e.preventDefault();
             e.stopPropagation();
             setOpen(!isMenuOpen());
@@ -102,6 +188,11 @@
             if (!(t instanceof Node)) return;
             if (!isMenuOpen()) return;
             if (btn.contains(t) || panel.contains(t)) return;
+            // #region agent log
+            dbgLog("H4", "script.js:document:click", "document closes menu (outside hit)", {
+                tag: t instanceof Element ? t.tagName : null,
+            });
+            // #endregion
             setOpen(false);
         });
 
@@ -118,6 +209,13 @@
             }
         }
         desktopNavMq.addEventListener("change", closeMenuIfDesktop);
+    } else {
+        // #region agent log
+        dbgLog("H1", "script.js:no-menu-init", "btn or panel missing — listeners not attached", {
+            hasBtn: !!btn,
+            hasPanel: !!panel,
+        });
+        // #endregion
     }
 
     document.querySelectorAll(".faq-q").forEach((question) => {
