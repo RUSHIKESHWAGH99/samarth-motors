@@ -10,16 +10,36 @@
     if (btn && panel) {
         function setOpen(open) {
             btn.setAttribute("aria-expanded", open ? "true" : "false");
-            panel.hidden = !open;
+            if (open) {
+                panel.removeAttribute("hidden");
+            } else {
+                panel.setAttribute("hidden", "");
+            }
         }
 
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             const open = btn.getAttribute("aria-expanded") === "true";
             setOpen(!open);
         });
 
         panel.querySelectorAll("a").forEach((link) => {
             link.addEventListener("click", () => setOpen(false));
+        });
+
+        document.addEventListener("click", (e) => {
+            const t = e.target;
+            if (!(t instanceof Node)) return;
+            if (panel.hasAttribute("hidden")) return;
+            if (btn.contains(t) || panel.contains(t)) return;
+            setOpen(false);
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && !panel.hasAttribute("hidden")) {
+                setOpen(false);
+            }
         });
     }
 
